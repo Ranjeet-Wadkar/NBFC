@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LoanMitra - Credit Score Prediction Platform</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      @media (max-width: 968px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+      }
+
+      .card h2 {
+        color: #667eea;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+        font-size: 0.95em;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1em;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      @media (max-width: 600px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .results-section {
+        display: none;
+      }
+
+      .results-section.show {
+        display: block;
+      }
+
+      .score-display {
+        text-align: center;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        color: white;
+        margin-bottom: 30px;
+      }
+
+      .score-value {
+        font-size: 4em;
+        font-weight: bold;
+        margin: 20px 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .score-label {
+        font-size: 1.2em;
+        opacity: 0.9;
+      }
+
+      .reasoning-list {
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .reasoning-item {
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+      }
+
+      .reasoning-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+      }
+
+      .reasoning-item.positive {
+        border-left-color: #28a745;
+      }
+
+      .reasoning-item.negative {
+        border-left-color: #dc3545;
+      }
+
+      .reasoning-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .feature-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 1.05em;
+      }
+
+      .contribution {
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+      }
+
+      .contribution.positive {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .contribution.negative {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .feature-value {
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 5px;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #dc3545;
+        display: none;
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      .section-title {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .quick-fill-btn {
+        background: #6c757d;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.85em;
+        cursor: pointer;
+        margin-bottom: 15px;
+      }
+
+      .quick-fill-btn:hover {
+        background: #5a6268;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏦 LoanMitra</h1>
+        <p>Intelligent Credit Score Prediction Platform</p>
+      </div>
+
+      <div class="main-content">
+        <!-- Input Form -->
+        <div class="card">
+          <h2>Customer Information</h2>
+          <button class="quick-fill-btn" onclick="fillSampleData()">
+            📝 Fill Sample Data
+          </button>
+
+          <div class="error-message" id="errorMessage"></div>
+
+          <form id="creditForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Derogatory Count (DerogCnt)</label>
+                <input type="number" id="DerogCnt" step="any" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Collection Count (CollectCnt)</label>
+                <input type="number" id="CollectCnt" step="any" value="0" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bankruptcy Indicator (BankruptcyInd)</label>
+                <select id="BankruptcyInd">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Inquiry Count (Last 6 Months) (InqCnt06)</label>
+                <input type="number" id="InqCnt06" step="any" value="0" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Time Since Last Inquiry (InqTimeLast)</label>
+                <input
+                  type="number"
+                  id="InqTimeLast"
+                  step="any"
+                  value="0"
+                  placeholder="Months"
+                />
+              </div>
+              <div class="form-group">
+                <label
+                  >Finance Inquiry Count (24 Months) (InqFinanceCnt24)</label
+                >
+                <input
+                  type="number"
+                  id="InqFinanceCnt24"
+                  step="any"
+                  value="0"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Time Since First Trade Line (TLTimeFirst)</label>
+                <input
+                  type="number"
+                  id="TLTimeFirst"
+                  step="any"
+                  value="0"
+                  placeholder="Months"
+                />
+              </div>
+              <div class="form-group">
+                <label>Time Since Last Trade Line (TLTimeLast)</label>
+                <input
+                  type="number"
+                  id="TLTimeLast"
+                  step="any"
+                  value="0"
+                  placeholder="Months"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Trade Line 50% Utilization Count (TL50UtilCnt)</label>
+                <input type="number" id="TL50UtilCnt" step="any" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Trade Line Balance High Credit % (TLBalHCPct)</label>
+                <input
+                  type="number"
+                  id="TLBalHCPct"
+                  step="any"
+                  value="0"
+                  placeholder="Percentage"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Trade Line Satisfaction % (TLSatPct)</label>
+                <input
+                  type="number"
+                  id="TLSatPct"
+                  step="any"
+                  value="0"
+                  placeholder="Percentage"
+                />
+              </div>
+              <div class="form-group">
+                <label
+                  >30-60 Day Delinquency Count (24M) (TLDel3060Cnt24)</label
+                >
+                <input type="number" id="TLDel3060Cnt24" step="any" value="0" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>90 Day Delinquency Count (24M) (TLDel90Cnt24)</label>
+                <input type="number" id="TLDel90Cnt24" step="any" value="0" />
+              </div>
+              <div class="form-group">
+                <label
+                  >60 Day Delinquency Count (All Time) (TLDel60CntAll)</label
+                >
+                <input type="number" id="TLDel60CntAll" step="any" value="0" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Trade Line Open % (TLOpenPct)</label>
+                <input
+                  type="number"
+                  id="TLOpenPct"
+                  step="any"
+                  value="0"
+                  placeholder="Percentage"
+                />
+              </div>
+              <div class="form-group">
+                <label>Trade Line Bad Derogatory Count (TLBadDerogCnt)</label>
+                <input type="number" id="TLBadDerogCnt" step="any" value="0" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>60 Day Delinquency Count (24M) (TLDel60Cnt24)</label>
+                <input type="number" id="TLDel60Cnt24" step="any" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Trade Line Open % (24M) (TLOpen24Pct)</label>
+                <input
+                  type="number"
+                  id="TLOpen24Pct"
+                  step="any"
+                  value="0"
+                  placeholder="Percentage"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>UPI Average Expenditure (₹) (UPI_Avg_Expenditure)</label>
+                <input
+                  type="number"
+                  id="UPI_Avg_Expenditure"
+                  step="any"
+                  value="0"
+                />
+              </div>
+              <div class="form-group">
+                <label
+                  >Phone Payments Average/Month (₹)
+                  (Phone_Payments_AvgPerMonth)</label
+                >
+                <input
+                  type="number"
+                  id="Phone_Payments_AvgPerMonth"
+                  step="any"
+                  value="0"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label
+                  >Electricity Bill Average/Month (₹)
+                  (Electricity_Bill_AvgPerMonth)</label
+                >
+                <input
+                  type="number"
+                  id="Electricity_Bill_AvgPerMonth"
+                  step="any"
+                  value="0"
+                />
+              </div>
+              <div class="form-group">
+                <label
+                  >Other Microfinance Loans Count
+                  (Other_Microfinance_Loans_Count)</label
+                >
+                <input
+                  type="number"
+                  id="Other_Microfinance_Loans_Count"
+                  step="any"
+                  value="0"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label
+                >Other Microfinance Average Monthly (₹)
+                (Other_Microfinance_AvgMonthly)</label
+              >
+              <input
+                type="number"
+                id="Other_Microfinance_AvgMonthly"
+                step="any"
+                value="0"
+              />
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+              Calculate Credit Score
+            </button>
+          </form>
+
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px">Processing your request...</p>
+          </div>
+        </div>
+
+        <!-- Results Display -->
+        <div class="card">
+          <h2>Credit Score Results</h2>
+          <div class="results-section" id="resultsSection">
+            <div class="score-display">
+              <div class="score-label">Your Credit Score</div>
+              <div class="score-value" id="scoreValue">-</div>
+              <div class="score-label" id="scoreRange">Score Range: 0-900</div>
+            </div>
+
+            <div class="section-title">Score Breakdown & Reasoning</div>
+            <div class="reasoning-list" id="reasoningList"></div>
+          </div>
+          <div
+            id="noResults"
+            style="text-align: center; padding: 40px; color: #999"
+          >
+            <p>
+              Fill in the form and click "Calculate Credit Score" to see results
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:8000"; // Change this if your API is hosted elsewhere
+
+      const featureFields = [
+        "DerogCnt",
+        "CollectCnt",
+        "BankruptcyInd",
+        "InqCnt06",
+        "InqTimeLast",
+        "InqFinanceCnt24",
+        "TLTimeFirst",
+        "TLTimeLast",
+        "TL50UtilCnt",
+        "TLBalHCPct",
+        "TLSatPct",
+        "TLDel3060Cnt24",
+        "TLDel90Cnt24",
+        "TLDel60CntAll",
+        "TLOpenPct",
+        "TLBadDerogCnt",
+        "TLDel60Cnt24",
+        "TLOpen24Pct",
+        "UPI_Avg_Expenditure",
+        "Phone_Payments_AvgPerMonth",
+        "Electricity_Bill_AvgPerMonth",
+        "Other_Microfinance_Loans_Count",
+        "Other_Microfinance_AvgMonthly",
+      ];
+
+      function fillSampleData() {
+        // Sample data with reasonable values
+        document.getElementById("DerogCnt").value = 0;
+        document.getElementById("CollectCnt").value = 0;
+        document.getElementById("BankruptcyInd").value = 0;
+        document.getElementById("InqCnt06").value = 2;
+        document.getElementById("InqTimeLast").value = 3;
+        document.getElementById("InqFinanceCnt24").value = 5;
+        document.getElementById("TLTimeFirst").value = 60;
+        document.getElementById("TLTimeLast").value = 2;
+        document.getElementById("TL50UtilCnt").value = 1;
+        document.getElementById("TLBalHCPct").value = 45;
+        document.getElementById("TLSatPct").value = 85;
+        document.getElementById("TLDel3060Cnt24").value = 0;
+        document.getElementById("TLDel90Cnt24").value = 0;
+        document.getElementById("TLDel60CntAll").value = 0;
+        document.getElementById("TLOpenPct").value = 70;
+        document.getElementById("TLBadDerogCnt").value = 0;
+        document.getElementById("TLDel60Cnt24").value = 0;
+        document.getElementById("TLOpen24Pct").value = 75;
+        document.getElementById("UPI_Avg_Expenditure").value = 15000;
+        document.getElementById("Phone_Payments_AvgPerMonth").value = 500;
+        document.getElementById("Electricity_Bill_AvgPerMonth").value = 2000;
+        document.getElementById("Other_Microfinance_Loans_Count").value = 1;
+        document.getElementById("Other_Microfinance_AvgMonthly").value = 3000;
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.classList.add("show");
+        setTimeout(() => {
+          errorDiv.classList.remove("show");
+        }, 5000);
+      }
+
+      function getScoreColor(score) {
+        if (score >= 720) return "#28a745"; // Green
+        if (score >= 650) return "#ffc107"; // Yellow
+        if (score >= 580) return "#fd7e14"; // Orange
+        return "#dc3545"; // Red
+      }
+
+      function getScoreRating(score) {
+        if (score >= 720) return "Excellent";
+        if (score >= 650) return "Good";
+        if (score >= 580) return "Fair";
+        return "Poor";
+      }
+
+      document
+        .getElementById("creditForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const submitBtn = document.getElementById("submitBtn");
+          const loading = document.getElementById("loading");
+          const resultsSection = document.getElementById("resultsSection");
+          const noResults = document.getElementById("noResults");
+
+          // Collect form data
+          const data = {};
+          featureFields.forEach((field) => {
+            const element = document.getElementById(field);
+            if (element) {
+              const value = element.value;
+              data[field] = value === "" ? 0 : parseFloat(value) || 0;
+            }
+          });
+
+          // Disable button and show loading
+          submitBtn.disabled = true;
+          loading.classList.add("show");
+          resultsSection.classList.remove("show");
+          noResults.style.display = "block";
+
+          try {
+            const response = await fetch(`${API_URL}/predict`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ data: data }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Display results
+            const score = result.credit_score;
+            document.getElementById("scoreValue").textContent =
+              Math.round(score);
+            document.getElementById("scoreValue").style.color =
+              getScoreColor(score);
+            document.getElementById(
+              "scoreRange"
+            ).textContent = `Score: ${Math.round(score)}/900 - ${getScoreRating(
+              score
+            )}`;
+
+            // Display reasoning
+            const reasoningList = document.getElementById("reasoningList");
+            reasoningList.innerHTML = "";
+
+            // Sort by absolute contribution (descending)
+            const sortedReasoning = result.reasoning.sort(
+              (a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)
+            );
+
+            sortedReasoning.forEach((item) => {
+              const div = document.createElement("div");
+              div.className = `reasoning-item ${
+                item.contribution > 0 ? "positive" : "negative"
+              }`;
+
+              div.innerHTML = `
+                        <div class="reasoning-header">
+                            <span class="feature-name">${item.feature}</span>
+                            <span class="contribution ${
+                              item.contribution > 0 ? "positive" : "negative"
+                            }">
+                                ${
+                                  item.contribution > 0 ? "+" : ""
+                                }${item.contribution.toFixed(2)} pts
+                            </span>
+                        </div>
+                        <div class="feature-value">Value: ${item.value}</div>
+                    `;
+
+              reasoningList.appendChild(div);
+            });
+
+            resultsSection.classList.add("show");
+            noResults.style.display = "none";
+          } catch (error) {
+            console.error("Error:", error);
+            showError(
+              `Failed to calculate credit score: ${error.message}. Make sure the API is running on ${API_URL}`
+            );
+          } finally {
+            submitBtn.disabled = false;
+            loading.classList.remove("show");
+          }
+        });
+    </script>
+  </body>
+</html>

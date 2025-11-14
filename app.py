@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
@@ -9,6 +10,15 @@ model = joblib.load("credit_score_model.pkl")
 features = joblib.load("model_features.pkl")
 
 app = FastAPI(title="Credit Score Prediction API")
+
+# Add CORS middleware to allow frontend to connect
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Root route
 @app.get("/")
